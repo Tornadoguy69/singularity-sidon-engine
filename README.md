@@ -25,10 +25,14 @@ No hand-waving or exaggerated Millennium Prize claims. Everything in this reposi
 ## 📦 Repository Contents
 
 ```text
-├── tornado_guy_honest_illustrated_paper.pdf   # 4-Page Illustrated Technical Whitepaper & Field Guide
-├── singularity_visualizer_3d.html             # Standalone Three.js + GLSL 18,000-Particle Installation
-├── erdos_156_hunter.py                        # Bitmask Evolutionary Solver & Zero-Trust Verifier
-└── singularity_pinn.py                        # PyTorch Divergence-Free Self-Similar Blow-Up PINN
+├── erdos_pinn_research_note.pdf              # 2-Page Minimal Research Note (Exact N_max(6)=67 & Radii Proof)
+├── erdos_156_lab.py                          # Exact Branch-and-Bound + Translation-Invariance Solver (v5)
+├── euler_clm_pinn_lab.py                     # Chebyshev-ResNet PINN (1.3e-7) + Newton-Kantorovich Radii Proof (v5)
+├── generate_pdf_report.py                    # Minimal ReportLab Academic PDF Generator
+├── tornado_guy_honest_illustrated_paper.pdf  # 4-Page Illustrated Technical Whitepaper & Field Guide
+├── singularity_visualizer_3d.html            # Standalone Three.js + GLSL 18,000-Particle Installation
+├── erdos_156_hunter.py                       # Bitmask Evolutionary Solver & Zero-Trust Verifier
+└── singularity_pinn.py                       # PyTorch Divergence-Free Self-Similar Blow-Up PINN
 ```
 
 ---
