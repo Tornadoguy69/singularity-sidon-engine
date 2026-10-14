@@ -44,8 +44,8 @@ python -m http.server 8000
 # Open http://localhost:8000/singularity_visualizer_3d.html
 ```
 
-* **Mode `01 / NAVIER–STOKES SINGULARITY`:** Scrub time $t \to T^*$ to watch 18,000 Lagrangian filaments collapse into the hyperbolic vortex throat with real-time optical circle-of-confusion depth of field and monophonic film-grain dithering. Adjust the scaling eigenvalue $\lambda$ around $\lambda^* = 0.588$ to observe the live PDE residual $\lVert \mathcal{R} \rVert_\infty$.
-* **Mode `02 / ERDŐS #156 SIDON TOPOLOGY`:** Morphs the particle system into a 3D Clifford Torus mapping modular pairwise sum chords and outputs live Maximal Sidon certificates in the bottom HUD.
+* **Mode `01 / NAVIER–STOKES SINGULARITY`:** Scrub time $t \to T^*$ to watch 18,000 Lagrangian filaments collapse into the hyperbolic vortex throat with real-time optical circle-of-confusion depth of field and monophonic film-grain dithering (illustrative fluid mechanics animation; see `singularity_pinn.py` for computed PDE solutions).
+* **Mode `02 / ERDŐS #156 SIDON TOPOLOGY`:** Morphs the particle system into a 3D Clifford Torus mapping modular pairwise sum chords with a live in-page verifier that audits sum collisions and maximality across any domain horizon $N$.
 
 ---
 

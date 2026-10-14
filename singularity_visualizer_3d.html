@@ -378,11 +378,11 @@
 
     <div class="telemetry-strip">
       <div class="tele-cell">
-        <span class="tele-label" id="lbl-tele-1">RESIDUAL ||R||_∞</span>
-        <span class="tele-val accent" id="val-tele-1">1.42e-12</span>
+        <span class="tele-label" id="lbl-tele-1">RESIDUAL ||R||_∞ (NOT COMPUTED)</span>
+        <span class="tele-val accent" id="val-tele-1">N/A</span>
       </div>
       <div class="tele-cell">
-        <span class="tele-label" id="lbl-tele-2">EIGENVALUE λ</span>
+        <span class="tele-label" id="lbl-tele-2">λ (SLIDER INPUT)</span>
         <span class="tele-val" id="val-tele-2">0.5880</span>
       </div>
       <div class="tele-cell">
@@ -390,7 +390,7 @@
         <span class="tele-val" id="val-tele-3">0.2800</span>
       </div>
       <div class="tele-cell">
-        <span class="tele-label" id="lbl-tele-4">VORTICITY ||ω||_∞</span>
+        <span class="tele-label" id="lbl-tele-4">ω (ANIMATION PARAM)</span>
         <span class="tele-val" id="val-tele-4">18.42</span>
       </div>
     </div>
@@ -400,11 +400,11 @@
   <footer class="bottom-console">
     <div class="certificate-strip">
       <span class="cert-data" id="cert-readout">
-        ANSATZ: u(x,t) = (T*−t)^(-λ/(1+λ)) U(x/(T*−t)^(1/(1+λ))) &nbsp;//&nbsp; SOLENOIDAL CONSTRAINT: ∇·U = 0.000000e+00
+        ANSATZ: u(x,t) = (T*−t)^(-λ/(1+λ)) U(x/(T*−t)^(1/(1+λ))) &nbsp;//&nbsp; ILLUSTRATIVE VISUALIZATION // NO PDE SOLVED HERE
       </span>
       <span class="cert-status">
         <span class="micro-dot"></span>
-        <span id="status-badge">ZERO-TRUST AUDIT: LOCKED</span>
+        <span id="status-badge">ILLUSTRATIVE ANIMATION, NOT A COMPUTED SOLUTION</span>
       </span>
     </div>
 
@@ -439,7 +439,7 @@
       <!-- MICRO ACTION BUTTONS -->
       <div class="button-cluster">
         <button class="micro-btn" id="btn-lock-lambda" onclick="lockEigenvalue()">
-          <span>LOCK λ* (0.588)</span>
+          <span>RESET λ (0.588)</span>
         </button>
         <button class="micro-btn active" id="btn-auto" onclick="togglePlayback()">
           <span class="micro-dot"></span>
@@ -525,12 +525,11 @@ bgScene.add(bgQuad);
 renderer.autoClear = false;
 
 // --- 2. ERDŐS PROBLEM #156 MAXIMAL SIDON SET SOLVER & CERTIFICATE GENERATOR ---
-const KNOWN_N100_CERT = [1, 2, 5, 11, 19, 29, 36, 49, 50];
 let currentSidonN = 100;
-let currentSidonSet = [...KNOWN_N100_CERT];
+let currentSidonSet = [];
+let currentAudit = null;
 
 function computeMaximalSidonSet(N) {
-  if (N === 100) return [...KNOWN_N100_CERT];
   const A = [];
   const sums = new Set();
   const blocked = new Set();
@@ -556,6 +555,30 @@ function computeMaximalSidonSet(N) {
   }
   return A;
 }
+
+// Independent check, run on whatever set is displayed. Nothing here trusts the solver.
+// collisions: pair sums (a<=b) that repeat. addable: numbers in [1,N] that could still be added.
+function verifySidon(A, N) {
+  const seen = new Set();
+  let collisions = 0;
+  for (let i = 0; i < A.length; i++) {
+    for (let j = i; j < A.length; j++) {
+      const s = A[i] + A[j];
+      if (seen.has(s)) collisions++; else seen.add(s);
+    }
+  }
+  const inA = new Set(A);
+  let addable = 0;
+  for (let x = 1; x <= N; x++) {
+    if (inA.has(x)) continue;
+    let ok = !seen.has(2 * x);
+    for (let i = 0; ok && i < A.length; i++) if (seen.has(x + A[i])) ok = false;
+    if (ok) addable++;
+  }
+  const pairs = A.length * (A.length + 1) / 2;
+  return { collisions, addable, pairs, isSidon: collisions === 0, isMaximal: collisions === 0 && addable === 0 };
+}
+window.verifySidon = verifySidon;
 
 // --- 3. 18,000-PARTICLE GPGPU-STYLE DUAL-TOPOLOGY SHADER SYSTEM ---
 const PARTICLE_COUNT = 18000;
@@ -774,6 +797,7 @@ function rebuildErdosGeometry(N) {
   }
 
   currentSidonSet = computeMaximalSidonSet(N);
+  currentAudit = verifySidon(currentSidonSet, N);
   const sidonLookup = new Set(currentSidonSet);
 
   const R_major = 2.65;
@@ -900,10 +924,10 @@ function setMode(modeIndex) {
 
   if (modeIndex === 0) {
     document.getElementById('hud-subtitle').textContent = 'SELF-SIMILAR BLOW-UP FIELD // U(y) = ∇ × Ψ(y)';
-    document.getElementById('lbl-tele-1').textContent = 'RESIDUAL ||R||_∞';
-    document.getElementById('lbl-tele-2').textContent = 'EIGENVALUE λ';
+    document.getElementById('lbl-tele-1').textContent = 'RESIDUAL ||R||_∞ (NOT COMPUTED)';
+    document.getElementById('lbl-tele-2').textContent = 'λ (SLIDER INPUT)';
     document.getElementById('lbl-tele-3').textContent = 'HORIZON (T* − t)';
-    document.getElementById('lbl-tele-4').textContent = 'VORTICITY ||ω||_∞';
+    document.getElementById('lbl-tele-4').textContent = 'ω (ANIMATION PARAM)';
 
     document.getElementById('lbl-param-3').textContent = '03 / KINEMATIC VISCOSITY (ν)';
     slider3.min = '0.000';
@@ -1019,33 +1043,32 @@ function animate() {
     particleUniforms.uNu.value = nuVal;
     document.getElementById('val-param-3').textContent = nuVal.toFixed(4);
 
-    const eigDelta = Math.pow(lambdaVal - 0.588, 2);
-    const residual = 1.42e-12 + 0.065 * eigDelta;
     const vortMax = 2.0 * Math.pow(remT, -lambdaVal * beta * 0.65) * Math.exp(-nuVal * 18.0);
 
-    document.getElementById('val-tele-1').textContent = residual.toExponential(2);
+    document.getElementById('val-tele-1').textContent = 'N/A';
     document.getElementById('val-tele-2').textContent = lambdaVal.toFixed(4);
     document.getElementById('val-tele-3').textContent = remT.toFixed(4);
     document.getElementById('val-tele-4').textContent = vortMax.toFixed(2);
 
     document.getElementById('cert-readout').textContent =
-      `ANSATZ: u(x,t) = (T*−t)^(-λ/(1+λ)) U(x/(T*−t)^(1/(1+λ)))  //  SOLENOIDAL CONSTRAINT: ∇·U = 0.000000e+00`;
-    document.getElementById('status-badge').textContent =
-      Math.abs(lambdaVal - 0.588) < 0.003 ? 'EIGENVALUE λ* LOCKED (10⁻¹²)' : 'EIGENVALUE DRIFT DETECTED';
+      `ANSATZ (ILLUSTRATIVE): u(x,t) = (T*−t)^(-λ/(1+λ)) U(x/(T*−t)^(1/(1+λ)))  //  NO PDE SOLVED HERE, SEE REPO FOR SOLVER CODE`;
+    document.getElementById('status-badge').textContent = 'ILLUSTRATIVE ANIMATION, NOT A COMPUTED SOLUTION';
   } else {
     document.getElementById('val-param-3').textContent = String(currentSidonN);
     const card = currentSidonSet.length;
     const ratio = (card / Math.cbrt(currentSidonN)).toFixed(3);
-    const pairs = (card * (card + 1)) / 2;
+    const au = currentAudit;
 
     document.getElementById('val-tele-1').textContent = `${card} NODES`;
-    document.getElementById('val-tele-2').textContent = `${ratio} N^(1/3)`;
-    document.getElementById('val-tele-3').textContent = `${pairs} UNIQUE`;
-    document.getElementById('val-tele-4').textContent = `0 COLLISIONS`;
+    document.getElementById('val-tele-2').textContent = `${ratio}`;
+    document.getElementById('val-tele-3').textContent = `${au.pairs - au.collisions} / ${au.pairs} DISTINCT`;
+    document.getElementById('val-tele-4').textContent = `${au.collisions} COLLISIONS`;
 
     document.getElementById('cert-readout').textContent =
-      `VERIFIED MAXIMAL SIDON CERTIFICATE [N=${currentSidonN}, |A|=${card}]: A = { ${currentSidonSet.join(', ')} }`;
-    document.getElementById('status-badge').textContent = 'MAXIMALITY AUDIT: VERIFIED';
+      `GREEDY MAXIMAL SIDON SET, CHECKED IN-PAGE [N=${currentSidonN}, |A|=${card}]: A = { ${currentSidonSet.join(', ')} }`;
+    document.getElementById('status-badge').textContent = au.isMaximal
+      ? 'CHECKED: SIDON, MAXIMAL (0 ADDABLE)'
+      : `CHECK FAILED: ${au.collisions} COLLISIONS, ${au.addable} ADDABLE`;
   }
 
   // Render Pass 1: Dithered Obsidian Background
