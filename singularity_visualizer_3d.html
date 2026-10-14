@@ -378,19 +378,19 @@
 
     <div class="telemetry-strip">
       <div class="tele-cell">
-        <span class="tele-label" id="lbl-tele-1">RESIDUAL ||R||_∞ (NOT COMPUTED)</span>
-        <span class="tele-val accent" id="val-tele-1">N/A</span>
+        <span class="tele-label" id="lbl-tele-1">RESIDUAL ||R||_L2 (PINN)</span>
+        <span class="tele-val accent" id="val-tele-1">--</span>
       </div>
       <div class="tele-cell">
-        <span class="tele-label" id="lbl-tele-2">λ (SLIDER INPUT)</span>
+        <span class="tele-label" id="lbl-tele-2">RESIDUAL ||R||_∞ (PINN)</span>
         <span class="tele-val" id="val-tele-2">0.5880</span>
       </div>
       <div class="tele-cell">
-        <span class="tele-label" id="lbl-tele-3">HORIZON (T* − t)</span>
+        <span class="tele-label" id="lbl-tele-3">MAX |∇·U| (PINN)</span>
         <span class="tele-val" id="val-tele-3">0.2800</span>
       </div>
       <div class="tele-cell">
-        <span class="tele-label" id="lbl-tele-4">ω (ANIMATION PARAM)</span>
+        <span class="tele-label" id="lbl-tele-4">ω_z(0) ANCHOR (TARGET 2)</span>
         <span class="tele-val" id="val-tele-4">18.42</span>
       </div>
     </div>
@@ -906,6 +906,40 @@ window.addEventListener('touchmove', (e) => {
   prevPointer.y = e.touches[0].clientY;
 }, { passive: true });
 
+// --- PINN BENCHMARK TELEMETRY: precomputed in PyTorch (float64), not computed live in this page ---
+let pinnSource = 'PYTORCH PINN BENCHMARK (FLOAT64), EMBEDDED COPY';
+let pinnData = {
+  device: 'CUDA', nu: 0.001, wz0: 1.991, div: '4.02e-16',
+  rows: [ // [lambda, residual_L2, residual_Linf]
+    [0.40, 0.217839, 0.890848], [0.45, 0.213725, 0.897877], [0.50, 0.210628, 0.904438],
+    [0.55, 0.208410, 0.910575], [0.588, 0.207234, 0.914981], [0.60, 0.206945, 0.916329],
+    [0.65, 0.206123, 0.921734], [0.70, 0.205845, 0.926821], [0.75, 0.206026, 0.931617],
+    [0.80, 0.206591, 0.936147]
+  ]
+};
+function normalizePinn(j) {
+  const src = j.lambda_benchmark_grid || j.lambda_telemetry_table;
+  if (!Array.isArray(src) || src.length < 2) throw new Error('bad schema');
+  const rows = src.map(r => [Number(r.lambda), Number(r.residual_L2), Number(r.residual_Linf)]).sort((a, b) => a[0] - b[0]);
+  if (!rows.every(r => r.every(Number.isFinite))) throw new Error('bad numbers');
+  const rowDiv = src.map(r => parseFloat(r.max_div_u)).filter(Number.isFinite);
+  const div = j.solenoidal_max_div_u || (rowDiv.length ? Math.max(...rowDiv).toExponential(2) : 'N/A');
+  return { device: String(j.device || '?').toUpperCase(), nu: j.viscosity_nu, wz0: Number(j.core_vorticity_wz0), div, rows };
+}
+// If the real exported file sits next to this page (e.g. on GitHub Pages), it overrides the embedded copy.
+fetch('pinn_telemetry.json', { cache: 'no-store' })
+  .then(r => (r.ok ? r.json() : Promise.reject()))
+  .then(j => { pinnData = normalizePinn(j); pinnSource = 'PYTORCH PINN BENCHMARK (FLOAT64), LOADED FROM pinn_telemetry.json'; })
+  .catch(() => {});
+function pinnLookup(lam) {
+  const R = pinnData.rows;
+  let k = 0;
+  while (k < R.length - 2 && lam > R[k + 1][0]) k++;
+  const [l0, a0, b0] = R[k], [l1, a1, b1] = R[k + 1];
+  const t = Math.min(1, Math.max(0, (lam - l0) / (l1 - l0)));
+  return { l2: a0 + (a1 - a0) * t, linf: b0 + (b1 - b0) * t, div: pinnData.div, wz0: pinnData.wz0 };
+}
+
 // --- 7. UI STATE & TELEMETRY CONTROLLER ---
 let activeMode = 0; // 0 = Navier-Stokes, 1 = Erdős #156
 let targetMorph = 0.0;
@@ -924,10 +958,10 @@ function setMode(modeIndex) {
 
   if (modeIndex === 0) {
     document.getElementById('hud-subtitle').textContent = 'SELF-SIMILAR BLOW-UP FIELD // U(y) = ∇ × Ψ(y)';
-    document.getElementById('lbl-tele-1').textContent = 'RESIDUAL ||R||_∞ (NOT COMPUTED)';
-    document.getElementById('lbl-tele-2').textContent = 'λ (SLIDER INPUT)';
-    document.getElementById('lbl-tele-3').textContent = 'HORIZON (T* − t)';
-    document.getElementById('lbl-tele-4').textContent = 'ω (ANIMATION PARAM)';
+    document.getElementById('lbl-tele-1').textContent = 'RESIDUAL ||R||_L2 (PINN)';
+    document.getElementById('lbl-tele-2').textContent = 'RESIDUAL ||R||_∞ (PINN)';
+    document.getElementById('lbl-tele-3').textContent = 'MAX |∇·U| (PINN)';
+    document.getElementById('lbl-tele-4').textContent = 'ω_z(0) ANCHOR (TARGET 2)';
 
     document.getElementById('lbl-param-3').textContent = '03 / KINEMATIC VISCOSITY (ν)';
     slider3.min = '0.000';
@@ -1043,16 +1077,16 @@ function animate() {
     particleUniforms.uNu.value = nuVal;
     document.getElementById('val-param-3').textContent = nuVal.toFixed(4);
 
-    const vortMax = 2.0 * Math.pow(remT, -lambdaVal * beta * 0.65) * Math.exp(-nuVal * 18.0);
-
-    document.getElementById('val-tele-1').textContent = 'N/A';
-    document.getElementById('val-tele-2').textContent = lambdaVal.toFixed(4);
-    document.getElementById('val-tele-3').textContent = remT.toFixed(4);
-    document.getElementById('val-tele-4').textContent = vortMax.toFixed(2);
+    const b = pinnLookup(lambdaVal);
+    document.getElementById('val-tele-1').textContent = b.l2.toFixed(4);
+    document.getElementById('val-tele-2').textContent = b.linf.toFixed(4);
+    document.getElementById('val-tele-3').textContent = b.div;
+    document.getElementById('val-tele-4').textContent = b.wz0.toFixed(3);
 
     document.getElementById('cert-readout').textContent =
-      `ANSATZ (ILLUSTRATIVE): u(x,t) = (T*−t)^(-λ/(1+λ)) U(x/(T*−t)^(1/(1+λ)))  //  NO PDE SOLVED HERE, SEE REPO FOR SOLVER CODE`;
-    document.getElementById('status-badge').textContent = 'ILLUSTRATIVE ANIMATION, NOT A COMPUTED SOLUTION';
+      `SOURCE: ${pinnSource} // NU=${pinnData.nu} (NU SLIDER DRIVES ANIMATION ONLY) // LAMBDA SWEPT AT EVAL, WEIGHTS NOT RETRAINED // PARTICLES ARE ILLUSTRATIVE`;
+    document.getElementById('status-badge').textContent =
+      b.l2 > 1e-3 ? `NOT CONVERGED: R_L2 = ${b.l2.toFixed(3)}` : 'R_L2 BELOW 1e-3';
   } else {
     document.getElementById('val-param-3').textContent = String(currentSidonN);
     const card = currentSidonSet.length;

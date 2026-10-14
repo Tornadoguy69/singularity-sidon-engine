@@ -1,0 +1,68 @@
+{
+  "solver": "PyTorch DivergenceFreePINN (float64 autograd curls)",
+  "device": "cuda",
+  "viscosity_nu": 0.001,
+  "core_vorticity_wz0": 1.991,
+  "lambda_telemetry_table": [
+    {
+      "lambda": 0.4,
+      "residual_L2": 0.217839,
+      "residual_Linf": 0.890848,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.45,
+      "residual_L2": 0.213725,
+      "residual_Linf": 0.897877,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.5,
+      "residual_L2": 0.210628,
+      "residual_Linf": 0.904438,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.55,
+      "residual_L2": 0.20841,
+      "residual_Linf": 0.910575,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.588,
+      "residual_L2": 0.207234,
+      "residual_Linf": 0.914981,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.6,
+      "residual_L2": 0.206945,
+      "residual_Linf": 0.916329,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.65,
+      "residual_L2": 0.206123,
+      "residual_Linf": 0.921734,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.7,
+      "residual_L2": 0.205845,
+      "residual_Linf": 0.926821,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.75,
+      "residual_L2": 0.206026,
+      "residual_Linf": 0.931617,
+      "max_div_u": "4.02e-16"
+    },
+    {
+      "lambda": 0.8,
+      "residual_L2": 0.206591,
+      "residual_Linf": 0.936147,
+      "max_div_u": "4.02e-16"
+    }
+  ]
+}
