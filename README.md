@@ -1,7 +1,7 @@
 # 🌪️ Singularity & Sidon: Dual Computational Attack Engines for 3D Fluid Blow-Up & Erdős #156
 
 [![Paper PDF](https://img.shields.io/badge/Paper_PDF-4--Page_Illustrated_Field_Guide-FF4F00?style=flat-square)](./tornado_guy_honest_illustrated_paper.pdf)
-[![3D Visualizer](https://img.shields.io/badge/WebGL_%2F_GLSL-18K_Filament_Visualizer-0A0A0E?style=flat-square)](./singularity_visualizer_3d.html)
+[![3D Visualizer](https://img.shields.io/badge/WebGL_%2F_GLSL-18K_Filament_Visualizer-0A0A0E?style=flat-square)](https://tornadoguy69.github.io/singularity-sidon-engine/singularity_visualizer_3d.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
 
 > **Lead Author & Principal Investigator:** Tornado guy  
